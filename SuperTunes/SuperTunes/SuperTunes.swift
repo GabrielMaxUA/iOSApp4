@@ -1,5 +1,4 @@
 import UIKit
-
 import AVFoundation
 
 class SuperTunes: UIViewController {
@@ -121,6 +120,7 @@ extension SuperTunes: UITableViewDelegate, UITableViewDataSource {
             cell.nameLabel.text = "(Nothing found)"
             cell.artistNameLabel.text = ""
             cell.artworkImageView.image = nil
+            cell.hideActivityIndicator()
             return cell
         } else {
             let cell = tableView.dequeueReusableCell(withIdentifier: TableView.CellIdentifiers.ResultCell, for: indexPath) as! ResultCell
@@ -135,6 +135,7 @@ extension SuperTunes: UITableViewDelegate, UITableViewDataSource {
             if let url = URL(string: searchResult.imageSmall) {
                 loadArtworkImage(url: url, for: cell)
             }
+            cell.hideActivityIndicator() // Hide activity indicator by default
             return cell
         }
     }
@@ -151,10 +152,12 @@ extension SuperTunes: UITableViewDelegate, UITableViewDataSource {
     }
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-//        tableView.deselectRow(at: indexPath, animated: true) // Deselect the row after selection
         let searchResult = searchResults[indexPath.row]
         if let previewUrlString = searchResult.previewUrl, let previewUrl = URL(string: previewUrlString) {
-            playAudio(url: previewUrl) // Play the audio preview
+            if let cell = tableView.cellForRow(at: indexPath) as? ResultCell {
+                cell.showActivityIndicator() // Show and animate the activity indicator
+            }
+            playAudio(url: previewUrl)
         }
     }
 
@@ -162,6 +165,10 @@ extension SuperTunes: UITableViewDelegate, UITableViewDataSource {
         if searchResults.isEmpty || isLoading {
             return nil // Prevent row selection if loading or no results
         } else {
+            // Hide activity indicator in previously selected cell
+            if let selectedIndexPath = tableView.indexPathForSelectedRow, let cell = tableView.cellForRow(at: selectedIndexPath) as? ResultCell {
+                cell.hideActivityIndicator()
+            }
             return indexPath
         }
     }
